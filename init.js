@@ -166,6 +166,11 @@
 						buffer     += "/"+parts[i];
 						parts[i]    = buffer;
 					}
+					for ( i = 0; i < parts.length; i++) {
+						if (this.isAtEnd(parts[i], "/")) {
+							parts[i] = parts[i].substring(0, parts[i].length-1);
+						}
+					}
 				}
 				result.parts = parts;
 				return result;
@@ -183,6 +188,28 @@
             var favoritesSize = $('.favorites-sb').height();
 			$('.favorites-sb').css("bottom", projectSize+"px");
 			$('.sb-left-content').css("bottom", projectSize+favoritesSize+"px");
+        },
+        
+        /**
+         *
+         * Test if item is at the end of string
+         * @name isAtend
+         * @param {string} string String to search in
+         * @param {String} item Item to search for
+         *
+         */
+        isAtEnd: function(string, item) {
+            var pos = string.lastIndexOf(item);
+            if (pos != -1) {
+                var part = string.substring(pos);
+                if (part === item) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
     };
 })(this, jQuery);
