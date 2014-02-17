@@ -52,14 +52,14 @@
                     _this.resize();
                 });
             });
-            $('.favorite-item a').live('click', function(e){
+            $('.favorite-item').live('click', function(e){
 				if (codiad.editor.settings.fileManagerTrigger) {
-					_this.jump(this);
+					_this.jump($(this).find('a'));
 				}
             });
-            $('.favorite-item a').live('dblclick', function(e){
+            $('.favorite-item').live('dblclick', function(e){
 				if (!codiad.editor.settings.fileManagerTrigger) {
-					_this.jump(this);
+					_this.jump($(this).find('a'));
 				}
             });
             $('.favorite-item img').live('click', function(){
