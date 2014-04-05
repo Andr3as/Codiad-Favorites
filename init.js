@@ -104,7 +104,7 @@
         add: function(path) {
             var element = $('a[data-path="'+path+'"]');
             var name    = $(element).text();
-            var project = codiad.project.getCurrent();
+            var project = $('#project-root').attr('data-path');
             var item    = '<li class="favorite-item"><img src="'+this.path+"remove.png"+'"></img>';
                 item   +='<a class="directory open" data-favorite-path="'+path+'" data-favorite-project="'+project+'">'+name+'</a></li>';
             $('#favorites-list').append(item);
