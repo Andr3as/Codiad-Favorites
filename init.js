@@ -21,6 +21,9 @@
         path: curpath,
         hide: true,
         item: null,
+        load: false,
+        
+        _storageKey: "codiad.plugin.favorites",
         
         /**
          * Init
@@ -51,6 +54,12 @@
                     }
                     _this.resize();
                 });
+                //Load favorites, but only if settings already loaded
+                if (_this.load) {
+                    _this.__loadLocalStorageItems();
+                } else {
+                    _this.load = true; //wait for settings to be loaded
+                }
             });
             $('.favorite-item').live('click', function(e){
 				if (codiad.editor.settings.fileManagerTrigger) {
@@ -63,6 +72,7 @@
 				}
             });
             $('.favorite-item img').live('click', function(){
+                _this.__removeFromLocalStorage($(this).parent().find('a'));
 				var parent = $(this).parent();
 				$(parent).remove();
             });
@@ -81,6 +91,13 @@
 					}
 				}
             });
+            amplify.subscribe('settings.loaded', function(obj){
+                if (_this.load) {
+                    _this.__loadLocalStorageItems();
+                } else {
+                    _this.load = true; //wait for template to be loaded
+                }
+            });
             //Prjects resizing - Get current and replace them
             var collapse    = codiad.project.projectsCollapse;
             var expand      = codiad.project.projectsExpand;
@@ -96,18 +113,99 @@
             };
         },
         
-       /**
-        * Add folder to favorites
-        * @name add
-        * @param {string} path Path of folder
-        */
+        /**
+         * Add folder to favorites
+         * @name add
+         * @param {string} path Path of folder
+         */
         add: function(path) {
             var element = $('a[data-path="'+path+'"]');
             var name    = $(element).text();
             var project = $('#project-root').attr('data-path');
+
+            this.__addToLocalStorage(path, name, project);
+            this.__add(path, name, project);
+        },
+        
+        /**
+         * Add folder to favorites
+         * @name add
+         * @param {string} path Path of folder
+         * @param {string} name Foldername
+         * @param {string} project Poject of folder
+         * @private
+         */
+        __add: function(path, name, project) {
             var item    = '<li class="favorite-item"><img src="'+this.path+"remove.png"+'"></img>';
                 item   +='<a class="directory open" data-favorite-path="'+path+'" data-favorite-project="'+project+'">'+name+'</a></li>';
             $('#favorites-list').append(item);
+        },
+        
+        /**
+         * Add folder to localStorage
+         * @name __addToLocalStorage
+         * @param {string} path Path of folder
+         * @param {string} name Foldername
+         * @param {string} project Poject of folder
+         * @private
+         */
+        __addToLocalStorage: function(path, name, project) {
+            var list = localStorage.getItem(this._storageKey) || "[]";
+            list = JSON.parse(list);
+            
+            list.push({path: path, name: name, project: project});
+            list = JSON.stringify(list);
+            localStorage.setItem(this._storageKey, list);
+            //Call system sync
+            codiad.settings.save();
+        },
+        
+        /**
+         * Remove folder from localStorage
+         * @name __removeFromLocalStorage
+         * @param {jQuery object} item Favorite entry that to remove
+         * @private
+         */
+        __removeFromLocalStorage: function(item) {
+            var path = $(item).attr('data-favorite-path');
+            var list = localStorage.getItem(this._storageKey);
+            if (list === null) {
+                return;
+            } else {
+                list = JSON.parse(list);
+            }
+            var index = -1;
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].path === path) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index < 0) {
+                return;
+            }
+            if (list.length === 1) {
+                list = []; //Workaround
+            } else {
+                list.splice(index, 1);
+            }
+            list = JSON.stringify(list);
+            localStorage.setItem(this._storageKey, list);
+            //Call system sync
+            codiad.settings.save();
+        },
+        
+        /**
+         * Load favorites from localStorage and add them
+         * @name __loadLocalStorageItems
+         * @private
+         */
+        __loadLocalStorageItems: function() {
+            var list = localStorage.getItem(this._storageKey) || "[]";
+            list = JSON.parse(list);
+            for (var i = 0; i < list.length; i++) {
+                this.__add(list[i].path, list[i].name, list[i].project);
+            }
         },
         
         /**
